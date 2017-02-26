@@ -8,7 +8,7 @@ import (
 
 	"github.com/0xAX/notificator"
 	desktop "github.com/axet/desktop/go"
-	"github.com/bradylove/cc-monitor/assets"
+	"github.com/bradylove/concourse-monitor/assets"
 )
 
 var (

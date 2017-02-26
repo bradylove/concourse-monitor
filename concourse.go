@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bradylove/cc-monitor/assets"
+	"github.com/bradylove/concourse-monitor/assets"
 )
 
 const (
