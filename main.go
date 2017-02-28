@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 	"time"
 
 	"github.com/0xAX/notificator"
@@ -15,6 +17,7 @@ var (
 	teamName          = flag.String("team-name", "main", "team name to monitor")
 	concourseURL      = flag.String("concourse-url", "", "url for concourse instance")
 	refreshIntSeconds = flag.Int("refresh-interval", 15, "interval for pulling status from concourse")
+	deamonize         = flag.Bool("d", false, "run concourse-monitor in the background")
 )
 
 func init() {
@@ -24,6 +27,22 @@ func init() {
 func main() {
 	if *concourseURL == "" {
 		log.Fatalf("concourse-url cannot be empty")
+	}
+
+	if *deamonize {
+		var args []string
+
+		for _, a := range os.Args[1:] {
+			if a != "-d" {
+				args = append(args, a)
+			}
+		}
+
+		fmt.Println("Starting concourse-monitor in the background")
+		cmd := exec.Command(os.Args[0], args...)
+		cmd.Start()
+
+		os.Exit(0)
 	}
 
 	refreshInt := time.Duration(*refreshIntSeconds) * time.Second
