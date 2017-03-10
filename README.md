@@ -15,7 +15,7 @@ issue and I will address the problem as soon as I can.**
 Assuming you have Go installed:
 
 ```
-go get github.com/bradylove/concourse-monitor
+go get github.com/bradylove/concourse-monitor/cmd/concourse-monitor
 ```
 
 Then run `concourse-monitor`.
