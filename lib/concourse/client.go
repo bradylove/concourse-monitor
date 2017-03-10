@@ -24,10 +24,14 @@ func NewClient(addr, teamName string) (*Client, error) {
 
 func (c *Client) Pipelines() ([]*Pipeline, error) {
 	resp, err := http.Get(c.addr + fmt.Sprintf(pipelinesPath, c.teamName))
-	_ = err // TODO: handle error
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
-	// TODO: check status code
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("expected 200 response code, got %d", resp.StatusCode)
+	}
 
 	var pipes []*Pipeline
 	err = json.NewDecoder(resp.Body).Decode(&pipes)
