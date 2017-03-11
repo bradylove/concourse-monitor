@@ -12,18 +12,31 @@ const (
 )
 
 type Client struct {
-	addr     string
-	teamName string
+	targets []Target
 }
 
 type Pipeline struct{}
 
-func NewClient(addr, teamName string) (*Client, error) {
-	return &Client{addr: addr, teamName: teamName}, nil
+func NewClient(targets []Target) (*Client, error) {
+	return &Client{targets}, nil
 }
 
-func (c *Client) Pipelines() ([]*Pipeline, error) {
-	resp, err := http.Get(c.addr + fmt.Sprintf(pipelinesPath, c.teamName))
+func (c *Client) Pipelines() ([]Pipeline, error) {
+	pipes := make([]Pipeline, 0)
+
+	for _, t := range c.targets {
+		p, err := c.requestPipeline(t.API, t.Team)
+		if err != nil {
+			return nil, err
+		}
+		pipes = append(pipes, p...)
+	}
+
+	return pipes, nil
+}
+
+func (c *Client) requestPipeline(host, team string) ([]Pipeline, error) {
+	resp, err := http.Get(host + fmt.Sprintf(pipelinesPath, team))
 	if err != nil {
 		return nil, err
 	}
@@ -33,11 +46,8 @@ func (c *Client) Pipelines() ([]*Pipeline, error) {
 		return nil, fmt.Errorf("expected 200 response code, got %d", resp.StatusCode)
 	}
 
-	var pipes []*Pipeline
-	err = json.NewDecoder(resp.Body).Decode(&pipes)
-	if err != nil {
-		return nil, err
-	}
+	var p []Pipeline
+	err = json.NewDecoder(resp.Body).Decode(&p)
 
-	return pipes, nil
+	return p, err
 }

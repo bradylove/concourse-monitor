@@ -16,7 +16,7 @@ func TestConcourseClient(t *testing.T) {
 	o := onpar.New()
 	defer o.Run(t)
 
-	o.Group("GetPipelines()", func() {
+	o.Group("Pipelines()", func() {
 		o.Group("with successful response", func() {
 			o.BeforeEach(func(t *testing.T) (*testing.T, *httptest.Server, chan *http.Request) {
 				requests := make(chan *http.Request, 100)
@@ -35,17 +35,23 @@ func TestConcourseClient(t *testing.T) {
 				s.Close()
 			})
 
-			o.Spec("it returns a list of pipelines", func(t *testing.T, s *httptest.Server, r chan *http.Request) {
-				client, err := concourse.NewClient(s.URL, "main")
+			o.Spec("it returns all pipelines", func(t *testing.T, s *httptest.Server, r chan *http.Request) {
+				targets := []concourse.Target{
+					{API: s.URL, Team: "main"},
+					{API: s.URL, Team: "awesome"},
+				}
+				client, err := concourse.NewClient(targets)
 				Expect(t, err).To(Not(HaveOccurred()))
 
 				pipes, err := client.Pipelines()
 				Expect(t, err).To(Not(HaveOccurred()))
+				Expect(t, pipes).To(HaveLen(4))
 
 				req := <-r
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines"))
 
-				Expect(t, pipes).To(HaveLen(2))
+				req = <-r
+				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/awesome/pipelines"))
 			})
 		})
 
@@ -64,7 +70,10 @@ func TestConcourseClient(t *testing.T) {
 			})
 
 			o.Spec("it returns an error", func(t *testing.T, s *httptest.Server) {
-				client, err := concourse.NewClient(s.URL, "main")
+				targets := []concourse.Target{
+					{API: s.URL, Team: "main"},
+				}
+				client, err := concourse.NewClient(targets)
 				Expect(t, err).To(Not(HaveOccurred()))
 
 				_, err = client.Pipelines()
@@ -74,7 +83,10 @@ func TestConcourseClient(t *testing.T) {
 
 		o.Group("with a request error", func() {
 			o.Spec("it returns an error", func(t *testing.T) {
-				client, err := concourse.NewClient("http://127.0.0.1:23223", "main")
+				targets := []concourse.Target{
+					{API: "http://127.0.0.1:23223", Team: "main"},
+				}
+				client, err := concourse.NewClient(targets)
 				Expect(t, err).To(Not(HaveOccurred()))
 
 				_, err = client.Pipelines()
