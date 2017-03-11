@@ -1,6 +1,7 @@
 package concourse_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,40 +19,55 @@ func TestConcourseClient(t *testing.T) {
 
 	o.Group("Pipelines()", func() {
 		o.Group("with successful response", func() {
-			o.BeforeEach(func(t *testing.T) (*testing.T, *httptest.Server, chan *http.Request) {
-				requests := make(chan *http.Request, 100)
-				handler := func(w http.ResponseWriter, r *http.Request) {
-					requests <- r
+			o.BeforeEach(func(t *testing.T) (*testing.T, *FakeConcourse) {
+				fc := NewFakeConcourse()
 
-					w.WriteHeader(http.StatusOK)
-					w.Write([]byte(getPipelinesRequest))
-				}
-				s := httptest.NewServer(http.HandlerFunc(handler))
-
-				return t, s, requests
+				return t, fc
 			})
 
-			o.AfterEach(func(t *testing.T, s *httptest.Server, r chan *http.Request) {
-				s.Close()
+			o.AfterEach(func(t *testing.T, fc *FakeConcourse) {
+				fc.Close()
 			})
 
-			o.Spec("it returns all pipelines", func(t *testing.T, s *httptest.Server, r chan *http.Request) {
+			o.Spec("it returns all pipelines and jobs", func(t *testing.T, fc *FakeConcourse) {
 				targets := []concourse.Target{
-					{API: s.URL, Team: "main"},
-					{API: s.URL, Team: "awesome"},
+					{API: fc.URL, Team: "main"},
+					{API: fc.URL, Team: "awesome"},
 				}
 				client, err := concourse.NewClient(targets)
 				Expect(t, err).To(Not(HaveOccurred()))
 
 				pipes, err := client.Pipelines()
 				Expect(t, err).To(Not(HaveOccurred()))
-				Expect(t, pipes).To(HaveLen(4))
+				Expect(t, pipes).To(HaveLen(2))
 
-				req := <-r
+				p1 := pipes[0]
+				Expect(t, p1.Name).To(Equal("pipeline-1"))
+				Expect(t, p1.URL).To(Equal("/teams/main/pipelines/pipeline-1"))
+				Expect(t, p1.Paused).To(Equal(false))
+				Expect(t, p1.TeamName).To(Equal("main"))
+				Expect(t, p1.Jobs).To(HaveLen(1))
+
+				j1 := p1.Jobs[0]
+				Expect(t, j1.Name).To(Equal("hello-world"))
+				Expect(t, j1.URL).To(Equal("/teams/main/pipelines/pipeline-1/jobs/hello-world"))
+
+				fmt.Printf("%#v\n", j1)
+
+				b1 := j1.FinishedBuild
+				Expect(t, b1.Status).To(Equal("failed"))
+
+				req := <-fc.requests
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines"))
 
-				req = <-r
+				req = <-fc.requests
+				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines/pipeline-1/jobs"))
+
+				req = <-fc.requests
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/awesome/pipelines"))
+
+				req = <-fc.requests
+				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines/pipeline-1/jobs"))
 			})
 		})
 
@@ -96,16 +112,43 @@ func TestConcourseClient(t *testing.T) {
 	})
 }
 
-var ()
+type FakeConcourse struct {
+	*httptest.Server
 
-const getPipelinesRequest = `[
-  {
-    "name": "pipeline-1",
-    "url": "/teams/main/pipelines/pipeline-1",
-    "paused": false,
-    "public": true,
-    "team_name": "main"
-  },
+	requests chan *http.Request
+}
+
+func NewFakeConcourse() *FakeConcourse {
+	f := &FakeConcourse{
+		requests: make(chan *http.Request, 100),
+	}
+
+	f.Server = httptest.NewServer(f)
+
+	return f
+}
+
+func (f *FakeConcourse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	f.requests <- r
+
+	w.WriteHeader(http.StatusOK)
+	if r.URL.Path == "/api/v1/teams/main/pipelines" ||
+		r.URL.Path == "/api/v1/teams/awesome/pipelines" {
+
+		w.Write([]byte(getPipelinesResponse))
+		return
+	}
+
+	if r.URL.Path == "/api/v1/teams/main/pipelines/pipeline-1/jobs" ||
+		r.URL.Path == "/api/v1/teams/awesome/pipelines/pipeline-1/jobs" {
+
+		w.Write([]byte(getJobsResponse))
+		return
+	}
+}
+
+const (
+	getPipelinesResponse = `[
   {
     "name": "pipeline-1",
     "url": "/teams/main/pipelines/pipeline-1",
@@ -114,3 +157,27 @@ const getPipelinesRequest = `[
     "team_name": "main"
   }
 ]`
+
+	getJobsResponse = `[
+  {
+    "name": "hello-world",
+    "url": "/teams/main/pipelines/pipeline-1/jobs/hello-world",
+    "next_build": null,
+    "finished_build": {
+      "id": 4,
+      "team_name": "main",
+      "name": "4",
+      "status": "failed",
+      "job_name": "hello-world",
+      "url": "/teams/main/pipelines/pipeline-1/jobs/hello-world/builds/4",
+      "api_url": "/api/v1/builds/4",
+      "pipeline_name": "pipeline-1",
+      "start_time": 1488167005,
+      "end_time": 1488167007
+    },
+    "inputs": [],
+    "outputs": [],
+    "groups": []
+  }
+]`
+)
