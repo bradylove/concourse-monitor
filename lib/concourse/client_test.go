@@ -30,8 +30,8 @@ func TestConcourseClient(t *testing.T) {
 
 			o.Spec("it returns all pipelines and jobs", func(t *testing.T, fc *FakeConcourse) {
 				targets := []concourse.Target{
-					{API: fc.URL, Team: "main"},
-					{API: fc.URL, Team: "awesome"},
+					{API: fc.URL, Team: "main", Token: concourse.Token{Type: "Bearer", Value: "main-token"}},
+					{API: fc.URL, Team: "awesome", Token: concourse.Token{Type: "Bearer", Value: "awesome-token"}},
 				}
 				client, err := concourse.NewClient(targets)
 				Expect(t, err).To(Not(HaveOccurred()))
@@ -57,15 +57,19 @@ func TestConcourseClient(t *testing.T) {
 
 				req := <-fc.requests
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines"))
+				Expect(t, req.Header.Get("Authorization")).To(Equal("Bearer main-token"))
 
 				req = <-fc.requests
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines/pipeline-1/jobs"))
+				Expect(t, req.Header.Get("Authorization")).To(Equal("Bearer main-token"))
 
 				req = <-fc.requests
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/awesome/pipelines"))
+				Expect(t, req.Header.Get("Authorization")).To(Equal("Bearer awesome-token"))
 
 				req = <-fc.requests
 				Expect(t, req.URL.Path).To(Equal("/api/v1/teams/main/pipelines/pipeline-1/jobs"))
+				Expect(t, req.Header.Get("Authorization")).To(Equal("Bearer awesome-token"))
 			})
 		})
 
