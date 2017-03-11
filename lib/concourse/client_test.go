@@ -1,7 +1,6 @@
 package concourse_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -50,9 +49,8 @@ func TestConcourseClient(t *testing.T) {
 
 				j1 := p1.Jobs[0]
 				Expect(t, j1.Name).To(Equal("hello-world"))
+				Expect(t, j1.Paused).To(BeTrue())
 				Expect(t, j1.URL).To(Equal("/teams/main/pipelines/pipeline-1/jobs/hello-world"))
-
-				fmt.Printf("%#v\n", j1)
 
 				b1 := j1.FinishedBuild
 				Expect(t, b1.Status).To(Equal("failed"))
@@ -163,6 +161,7 @@ const (
     "name": "hello-world",
     "url": "/teams/main/pipelines/pipeline-1/jobs/hello-world",
     "next_build": null,
+	"paused": true,
     "finished_build": {
       "id": 4,
       "team_name": "main",

@@ -18,6 +18,10 @@ var (
 )
 
 func PipelineToStatus(p *concourse.Pipeline) string {
+	if p.Paused {
+		return StatusPaused
+	}
+
 	failure := -1
 	for _, j := range p.Jobs {
 		priority := stateToPriority(JobToStatus(j))
@@ -35,6 +39,10 @@ func PipelineToStatus(p *concourse.Pipeline) string {
 }
 
 func JobToStatus(j *concourse.Job) string {
+	if j.Paused {
+		return StatusPaused
+	}
+
 	if j.NextBuild != nil {
 		return j.NextBuild.Status
 	}

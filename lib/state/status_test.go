@@ -26,7 +26,6 @@ func TestStatus(t *testing.T) {
 					state.StatusFailed,
 					state.StatusErrored,
 					state.StatusAborted,
-					state.StatusPaused,
 				}
 
 				for _, st := range testset {
@@ -48,7 +47,6 @@ func TestStatus(t *testing.T) {
 					state.StatusFailed,
 					state.StatusErrored,
 					state.StatusAborted,
-					state.StatusPaused,
 				}
 
 				for _, st := range testset {
@@ -58,6 +56,28 @@ func TestStatus(t *testing.T) {
 					}
 
 					Expect(t, state.JobToStatus(job)).To(Equal(st))
+				}
+			})
+		})
+
+		o.Group("with a paused job", func() {
+			o.Spec("it returns the status of finished build", func(t *testing.T) {
+				testset := []string{
+					state.StatusPending,
+					state.StatusStarted,
+					state.StatusSucceeded,
+					state.StatusFailed,
+					state.StatusErrored,
+					state.StatusAborted,
+				}
+
+				for _, st := range testset {
+					job := &concourse.Job{
+						Paused:        true,
+						FinishedBuild: &concourse.Build{Status: st},
+					}
+
+					Expect(t, state.JobToStatus(job)).To(Equal(state.StatusPaused))
 				}
 			})
 		})
@@ -73,7 +93,7 @@ func TestStatus(t *testing.T) {
 
 	o.Group("PipelineToStatus()", func() {
 		o.Group("with no failed, aborted or errored jobs", func() {
-			o.Spec("it return succeeded", func(t *testing.T) {
+			o.Spec("it returns succeeded", func(t *testing.T) {
 				p := &concourse.Pipeline{
 					Jobs: []*concourse.Job{
 						{FinishedBuild: &concourse.Build{Status: state.StatusSucceeded}},
@@ -86,8 +106,21 @@ func TestStatus(t *testing.T) {
 			})
 		})
 
+		o.Group("with a pipeline that is paused", func() {
+			o.Spec("it returns paused", func(t *testing.T) {
+				p := &concourse.Pipeline{
+					Paused: true,
+					Jobs: []*concourse.Job{
+						{FinishedBuild: &concourse.Build{Status: state.StatusSucceeded}},
+					},
+				}
+
+				Expect(t, state.PipelineToStatus(p)).To(Equal(state.StatusPaused))
+			})
+		})
+
 		o.Group("with a failed job", func() {
-			o.Spec("it return succeeded", func(t *testing.T) {
+			o.Spec("it returns failed", func(t *testing.T) {
 				p := &concourse.Pipeline{
 					Jobs: []*concourse.Job{
 						{FinishedBuild: &concourse.Build{Status: state.StatusSucceeded}},
@@ -102,7 +135,7 @@ func TestStatus(t *testing.T) {
 		})
 
 		o.Group("with an errored job", func() {
-			o.Spec("it return succeeded", func(t *testing.T) {
+			o.Spec("it returns errored", func(t *testing.T) {
 				p := &concourse.Pipeline{
 					Jobs: []*concourse.Job{
 						{FinishedBuild: &concourse.Build{Status: state.StatusSucceeded}},
@@ -116,7 +149,7 @@ func TestStatus(t *testing.T) {
 		})
 
 		o.Group("with an aborted job", func() {
-			o.Spec("it return succeeded", func(t *testing.T) {
+			o.Spec("it returns aborted", func(t *testing.T) {
 				p := &concourse.Pipeline{
 					Jobs: []*concourse.Job{
 						{FinishedBuild: &concourse.Build{Status: state.StatusSucceeded}},

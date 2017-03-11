@@ -26,6 +26,7 @@ type Pipeline struct {
 type Job struct {
 	Name          string `json:"name"`
 	URL           string `json:"url"`
+	Paused        bool   `json:"paused"`
 	NextBuild     *Build `json:"next_build"`
 	FinishedBuild *Build `json:"finished_build"`
 }
