@@ -3,10 +3,9 @@ package state_test
 import (
 	"testing"
 
+	"github.com/apoydence/onpar"
 	"github.com/bradylove/concourse-monitor/lib/concourse"
 	"github.com/bradylove/concourse-monitor/lib/state"
-
-	"github.com/apoydence/onpar"
 
 	. "github.com/apoydence/onpar/expect"
 	. "github.com/apoydence/onpar/matchers"
@@ -33,7 +32,7 @@ func TestStatus(t *testing.T) {
 						FinishedBuild: &concourse.Build{Status: st},
 					}
 
-					Expect(t, state.JobToStatus(job)).To(Equal(st))
+					Expect(t, state.JobStatus(job)).To(Equal(st))
 				}
 			})
 		})
@@ -55,7 +54,7 @@ func TestStatus(t *testing.T) {
 						FinishedBuild: &concourse.Build{Status: state.StatusSucceeded},
 					}
 
-					Expect(t, state.JobToStatus(job)).To(Equal(st))
+					Expect(t, state.JobStatus(job)).To(Equal(st))
 				}
 			})
 		})
@@ -77,7 +76,7 @@ func TestStatus(t *testing.T) {
 						FinishedBuild: &concourse.Build{Status: st},
 					}
 
-					Expect(t, state.JobToStatus(job)).To(Equal(state.StatusPaused))
+					Expect(t, state.JobStatus(job)).To(Equal(state.StatusPaused))
 				}
 			})
 		})
@@ -86,7 +85,7 @@ func TestStatus(t *testing.T) {
 			o.Spec("it returns the status of next build", func(t *testing.T) {
 				job := &concourse.Job{}
 
-				Expect(t, state.JobToStatus(job)).To(Equal(state.StatusUnknown))
+				Expect(t, state.JobStatus(job)).To(Equal(state.StatusUnknown))
 			})
 		})
 	})
@@ -102,7 +101,7 @@ func TestStatus(t *testing.T) {
 					},
 				}
 
-				Expect(t, state.PipelineToStatus(p)).To(Equal(state.StatusSucceeded))
+				Expect(t, state.PipelineStatus(p)).To(Equal(state.StatusSucceeded))
 			})
 		})
 
@@ -115,7 +114,7 @@ func TestStatus(t *testing.T) {
 					},
 				}
 
-				Expect(t, state.PipelineToStatus(p)).To(Equal(state.StatusPaused))
+				Expect(t, state.PipelineStatus(p)).To(Equal(state.StatusPaused))
 			})
 		})
 
@@ -130,7 +129,7 @@ func TestStatus(t *testing.T) {
 					},
 				}
 
-				Expect(t, state.PipelineToStatus(p)).To(Equal(state.StatusFailed))
+				Expect(t, state.PipelineStatus(p)).To(Equal(state.StatusFailed))
 			})
 		})
 
@@ -144,7 +143,7 @@ func TestStatus(t *testing.T) {
 					},
 				}
 
-				Expect(t, state.PipelineToStatus(p)).To(Equal(state.StatusErrored))
+				Expect(t, state.PipelineStatus(p)).To(Equal(state.StatusErrored))
 			})
 		})
 
@@ -157,7 +156,7 @@ func TestStatus(t *testing.T) {
 					},
 				}
 
-				Expect(t, state.PipelineToStatus(p)).To(Equal(state.StatusAborted))
+				Expect(t, state.PipelineStatus(p)).To(Equal(state.StatusAborted))
 			})
 		})
 	})

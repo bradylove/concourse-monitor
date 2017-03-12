@@ -33,11 +33,14 @@ func TestTargets(t *testing.T) {
 				Expect(t, err).To(Not(HaveOccurred()))
 				Expect(t, targets).To(HaveLen(2))
 
-				t1 := targets[0]
-				Expect(t, t1.API).To(Equal("http://127.0.0.1:8080"))
-				Expect(t, t1.Team).To(Equal("awesome"))
-				Expect(t, t1.Token.Type).To(Equal("Bearer"))
-				Expect(t, t1.Token.Value).To(Equal("a-token"))
+				Expect(t, targets).To(Contain(concourse.Target{
+					API:  "http://127.0.0.1:8080",
+					Team: "awesome",
+					Token: concourse.Token{
+						Type:  "Bearer",
+						Value: "a-token",
+					},
+				}))
 			})
 		})
 
