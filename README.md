@@ -5,10 +5,11 @@ display the status of your concourse builds. When a build goes from non green
 to green or green to non green then you will also receive a system
 notification.
 
-**Concourse Monitor currently only supports monitoring public pipelines.**
-
 **Concourse Monitor is new and may have problems, feel free to create a GitHub
 issue and I will address the problem as soon as I can.**
+
+Concourse Monitor loads targets, teams and authentication tokens from the RC
+file for the `fly` CLI which is expected to be located at `$HOME/.flyrc`.
 
 # Usage
 
@@ -23,14 +24,11 @@ Then run `concourse-monitor`.
 ```
 $ concourse-monitor --help
 Usage of ./concourse-monitor:
-  -concourse-url string
-        url for concourse instance
+  -d    run concourse-monitor in the background
   -refresh-interval int
         interval for pulling status from concourse (default 15)
-  -team-name string
-        team name to monitor (default "main")
 
-$ concourse-monitor --concourse-url=http://concourse-domain.tld
+$ concourse-monitor
 ```
 
 # MIT License
