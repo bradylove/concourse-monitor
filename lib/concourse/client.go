@@ -32,11 +32,13 @@ type Job struct {
 }
 
 type Build struct {
-	Status string `json:"status"`
+	Status       string `json:"status"`
+	JobName      string `json:"job_name"`
+	PipelineName string `json:"pipeline_name"`
 }
 
-func NewClient(targets []Target) (*Client, error) {
-	return &Client{targets}, nil
+func NewClient(targets []Target) *Client {
+	return &Client{targets}
 }
 
 func (c *Client) Pipelines() ([]*Pipeline, error) {

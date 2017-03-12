@@ -6,16 +6,18 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
+	desktop "gitlab.com/axet/desktop/go"
+
 	"github.com/0xAX/notificator"
-	desktop "github.com/axet/desktop/go"
 	"github.com/bradylove/concourse-monitor/lib/assets"
+	"github.com/bradylove/concourse-monitor/lib/concourse"
+	"github.com/bradylove/concourse-monitor/lib/state"
 )
 
 var (
-	teamName          = flag.String("team-name", "main", "team name to monitor")
-	concourseURL      = flag.String("concourse-url", "", "url for concourse instance")
 	refreshIntSeconds = flag.Int("refresh-interval", 15, "interval for pulling status from concourse")
 	deamonize         = flag.Bool("d", false, "run concourse-monitor in the background")
 )
@@ -25,10 +27,6 @@ func init() {
 }
 
 func main() {
-	if *concourseURL == "" {
-		log.Fatalf("concourse-url cannot be empty")
-	}
-
 	if *deamonize {
 		var args []string
 
@@ -78,16 +76,23 @@ func main() {
 
 func openInBrowser(path string) desktop.MenuAction {
 	return func(*desktop.Menu) {
-		desktop.BrowserOpenURI(fmt.Sprint(*concourseURL, path))
+		// TODO: Need to pass in target URL
+		desktop.BrowserOpenURI(path)
 	}
 }
 
 func syncState(tray *desktop.DesktopSysTray, cache *Cache) {
-	client := NewConcourseClient(*concourseURL)
-
-	pipelines, err := client.GetPipelines(*teamName)
+	targets, err := concourse.LoadTargets(filepath.Join(os.Getenv("HOME"), ".flyrc"))
 	if err != nil {
-		log.Println("Failed to fetch pipelines: %s", err)
+		log.Printf("Failed to load .flyrc: %s", err)
+		return
+	}
+
+	client := concourse.NewClient(targets)
+	pipelines, err := client.Pipelines()
+	if err != nil {
+		log.Printf("Failed to fetch pipelines: %s", err)
+		return
 	}
 
 	cache.Update(pipelines)
@@ -111,23 +116,23 @@ func syncState(tray *desktop.DesktopSysTray, cache *Cache) {
 	tray.Update()
 }
 
-func pipelineToMenu(p *Pipeline) desktop.Menu {
+func pipelineToMenu(p *concourse.Pipeline) desktop.Menu {
 	return desktop.Menu{
 		Type:    desktop.MenuItem,
 		Enabled: true,
 		Name:    p.Name,
 		Menu:    jobsToMenus(p.Jobs),
 		Action:  openInBrowser(p.URL),
-		Icon:    p.StatusIcon(),
+		Icon:    state.StatusIcon(state.PipelineStatus(p)),
 	}
 }
 
-func jobsToMenus(jobs []*Job) []desktop.Menu {
+func jobsToMenus(jobs []*concourse.Job) []desktop.Menu {
 	var menu []desktop.Menu
 	for _, j := range jobs {
 		item := desktop.Menu{
 			Type:    desktop.MenuItem,
-			Icon:    j.StatusIcon(),
+			Icon:    state.StatusIcon(state.JobStatus(j)),
 			Enabled: true,
 			Name:    j.Name,
 			Action:  openInBrowser(j.URL),

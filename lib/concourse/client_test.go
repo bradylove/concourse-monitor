@@ -33,8 +33,7 @@ func TestConcourseClient(t *testing.T) {
 					{API: fc.URL, Team: "main", Token: concourse.Token{Type: "Bearer", Value: "main-token"}},
 					{API: fc.URL, Team: "awesome", Token: concourse.Token{Type: "Bearer", Value: "awesome-token"}},
 				}
-				client, err := concourse.NewClient(targets)
-				Expect(t, err).To(Not(HaveOccurred()))
+				client := concourse.NewClient(targets)
 
 				pipes, err := client.Pipelines()
 				Expect(t, err).To(Not(HaveOccurred()))
@@ -91,10 +90,9 @@ func TestConcourseClient(t *testing.T) {
 				targets := []concourse.Target{
 					{API: s.URL, Team: "main"},
 				}
-				client, err := concourse.NewClient(targets)
-				Expect(t, err).To(Not(HaveOccurred()))
+				client := concourse.NewClient(targets)
 
-				_, err = client.Pipelines()
+				_, err := client.Pipelines()
 				Expect(t, err.Error()).To(Equal("expected 200 response code, got 500"))
 			})
 		})
@@ -104,10 +102,9 @@ func TestConcourseClient(t *testing.T) {
 				targets := []concourse.Target{
 					{API: "http://127.0.0.1:23223", Team: "main"},
 				}
-				client, err := concourse.NewClient(targets)
-				Expect(t, err).To(Not(HaveOccurred()))
+				client := concourse.NewClient(targets)
 
-				_, err = client.Pipelines()
+				_, err := client.Pipelines()
 				Expect(t, err).To(HaveOccurred())
 			})
 		})

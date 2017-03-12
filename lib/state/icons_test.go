@@ -33,7 +33,7 @@ func TestIcons(t *testing.T) {
 
 			for _, ts := range testset {
 				_ = ts
-				Expect(t, state.StateIcon(ts.status).At(1, 1)).To(Equal(ts.color))
+				Expect(t, state.StatusIcon(ts.status).At(1, 1)).To(Equal(ts.color))
 			}
 		})
 	})

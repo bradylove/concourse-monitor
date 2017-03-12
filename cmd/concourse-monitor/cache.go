@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/0xAX/notificator"
+	"github.com/bradylove/concourse-monitor/lib/concourse"
+	"github.com/bradylove/concourse-monitor/lib/state"
 )
 
 const (
@@ -15,18 +17,18 @@ type Notifier interface {
 }
 
 type Cache struct {
-	store    map[string]*Job
+	store    map[string]*concourse.Job
 	notifier Notifier
 }
 
 func NewCache(n Notifier) *Cache {
 	return &Cache{
-		store:    make(map[string]*Job),
+		store:    make(map[string]*concourse.Job),
 		notifier: n,
 	}
 }
 
-func (c *Cache) Update(pipelines []*Pipeline) {
+func (c *Cache) Update(pipelines []*concourse.Pipeline) {
 	for _, p := range pipelines {
 		for _, j := range p.Jobs {
 			oldJob, ok := c.store[j.URL]
@@ -51,12 +53,21 @@ func (c *Cache) Notify(msg string) {
 	)
 }
 
-func (c *Cache) NotifyOnBuildDiff(old, new *Build) {
-	if old.Status != statusSucceeded && new.Status == statusSucceeded {
+func (c *Cache) NotifyOnBuildDiff(old, new *concourse.Build) {
+	// TODO: Remove this and handle gracefully
+	if old == nil {
+		return
+	}
+
+	if new == nil {
+		return
+	}
+
+	if old.Status != state.StatusSucceeded && new.Status == state.StatusSucceeded {
 		c.Notify(fmt.Sprintf(notifyMsg, new.PipelineName, new.JobName, old.Status, new.Status))
 	}
 
-	if old.Status == statusSucceeded && new.Status != statusSucceeded {
+	if old.Status == state.StatusSucceeded && new.Status != state.StatusSucceeded {
 		c.Notify(fmt.Sprintf(notifyMsg, new.PipelineName, new.JobName, old.Status, new.Status))
 	}
 }

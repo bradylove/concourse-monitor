@@ -16,8 +16,17 @@ var (
 	ColorUnknown   = color.RGBA{96, 81, 163, 255}
 )
 
-func StateIcon(status string) image.Image {
-	return image.NewUniform(statusColor(status))
+func StatusIcon(status string) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, 24, 24))
+	color := statusColor(status)
+
+	for x := 1; x <= 24; x++ {
+		for y := 1; y <= 24; y++ {
+			img.Set(x, y, color)
+		}
+	}
+
+	return img
 }
 
 func statusColor(status string) color.Color {
