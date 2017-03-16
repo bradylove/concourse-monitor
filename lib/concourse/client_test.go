@@ -46,6 +46,7 @@ func TestConcourseClient(t *testing.T) {
 				Expect(t, p1.Paused).To(Equal(false))
 				Expect(t, p1.TeamName).To(Equal("main"))
 				Expect(t, p1.Jobs).To(HaveLen(1))
+				Expect(t, p1.Target).To(Equal(&targets[0]))
 
 				j1 := p1.Jobs[0]
 				Expect(t, j1.Name).To(Equal("hello-world"))

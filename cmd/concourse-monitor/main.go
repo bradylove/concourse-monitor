@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -74,10 +75,15 @@ func main() {
 	desktop.Main()
 }
 
-func openInBrowser(path string) desktop.MenuAction {
+func openInBrowser(target *concourse.Target, path string) desktop.MenuAction {
+	uri, err := url.Parse(target.API)
+	if err != nil {
+		return func(*desktop.Menu) {}
+	}
+
 	return func(*desktop.Menu) {
-		// TODO: Need to pass in target URL
-		desktop.BrowserOpenURI(path)
+		uri.Path = path
+		desktop.BrowserOpenURI(uri.String())
 	}
 }
 
@@ -121,13 +127,13 @@ func pipelineToMenu(p *concourse.Pipeline) desktop.Menu {
 		Type:    desktop.MenuItem,
 		Enabled: true,
 		Name:    p.DisplayName,
-		Menu:    jobsToMenus(p.Jobs),
-		Action:  openInBrowser(p.URL),
+		Menu:    jobsToMenus(p.Target, p.Jobs),
+		Action:  openInBrowser(p.Target, p.URL),
 		Icon:    state.StatusIcon(state.PipelineStatus(p)),
 	}
 }
 
-func jobsToMenus(jobs []*concourse.Job) []desktop.Menu {
+func jobsToMenus(target *concourse.Target, jobs []*concourse.Job) []desktop.Menu {
 	var menu []desktop.Menu
 	for _, j := range jobs {
 		item := desktop.Menu{
@@ -135,7 +141,7 @@ func jobsToMenus(jobs []*concourse.Job) []desktop.Menu {
 			Icon:    state.StatusIcon(state.JobStatus(j)),
 			Enabled: true,
 			Name:    j.Name,
-			Action:  openInBrowser(j.URL),
+			Action:  openInBrowser(target, j.URL),
 		}
 		menu = append(menu, item)
 	}

@@ -17,23 +17,24 @@ type Client struct {
 
 type Pipeline struct {
 	DisplayName string `json:"-"`
-	Name        string `json:"name"`
-	URL         string `json:"url"`
+	Name        string
+	URL         string
 	TeamName    string `json:"team_name"`
-	Paused      bool   `json:"paused"`
+	Paused      bool
 	Jobs        []*Job
+	Target      *Target `json:"-"`
 }
 
 type Job struct {
-	Name          string `json:"name"`
-	URL           string `json:"url"`
-	Paused        bool   `json:"paused"`
+	Name          string
+	URL           string
+	Paused        bool
 	NextBuild     *Build `json:"next_build"`
 	FinishedBuild *Build `json:"finished_build"`
 }
 
 type Build struct {
-	Status       string `json:"status"`
+	Status       string
 	JobName      string `json:"job_name"`
 	PipelineName string `json:"pipeline_name"`
 }
@@ -87,6 +88,7 @@ func (c *Client) requestPipeline(target Target) ([]*Pipeline, error) {
 
 		p.Jobs = j
 		p.DisplayName = fmt.Sprintf("%s/%s", target.Name, p.Name)
+		p.Target = &target
 	}
 
 	return pipelines, nil
