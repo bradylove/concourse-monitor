@@ -30,8 +30,8 @@ func TestConcourseClient(t *testing.T) {
 
 			o.Spec("it returns all pipelines and jobs", func(t *testing.T, fc *FakeConcourse) {
 				targets := []concourse.Target{
-					{API: fc.URL, Team: "main", Token: concourse.Token{Type: "Bearer", Value: "main-token"}},
-					{API: fc.URL, Team: "awesome", Token: concourse.Token{Type: "Bearer", Value: "awesome-token"}},
+					{Name: "one", API: fc.URL, Team: "main", Token: concourse.Token{Type: "Bearer", Value: "main-token"}},
+					{Name: "two", API: fc.URL, Team: "awesome", Token: concourse.Token{Type: "Bearer", Value: "awesome-token"}},
 				}
 				client := concourse.NewClient(targets)
 
@@ -40,6 +40,7 @@ func TestConcourseClient(t *testing.T) {
 				Expect(t, pipes).To(HaveLen(2))
 
 				p1 := pipes[0]
+				Expect(t, p1.DisplayName).To(Equal("one/pipeline-1"))
 				Expect(t, p1.Name).To(Equal("pipeline-1"))
 				Expect(t, p1.URL).To(Equal("/teams/main/pipelines/pipeline-1"))
 				Expect(t, p1.Paused).To(Equal(false))

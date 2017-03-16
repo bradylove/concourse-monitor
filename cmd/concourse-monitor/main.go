@@ -120,7 +120,7 @@ func pipelineToMenu(p *concourse.Pipeline) desktop.Menu {
 	return desktop.Menu{
 		Type:    desktop.MenuItem,
 		Enabled: true,
-		Name:    p.Name,
+		Name:    p.DisplayName,
 		Menu:    jobsToMenus(p.Jobs),
 		Action:  openInBrowser(p.URL),
 		Icon:    state.StatusIcon(state.PipelineStatus(p)),

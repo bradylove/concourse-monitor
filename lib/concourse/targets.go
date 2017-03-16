@@ -20,6 +20,7 @@ type Targets map[string]Target
 type Target struct {
 	API   string
 	Team  string
+	Name  string
 	Token Token
 }
 
@@ -35,7 +36,8 @@ func LoadTargets(path string) ([]Target, error) {
 	}
 
 	targets := make([]Target, 0)
-	for _, t := range flyRC.Targets {
+	for k, t := range flyRC.Targets {
+		t.Name = k
 		targets = append(targets, t)
 	}
 

@@ -16,11 +16,12 @@ type Client struct {
 }
 
 type Pipeline struct {
-	Name     string `json:"name"`
-	URL      string `json:"url"`
-	TeamName string `json:"team_name"`
-	Paused   bool   `json:"paused"`
-	Jobs     []*Job
+	DisplayName string `json:"-"`
+	Name        string `json:"name"`
+	URL         string `json:"url"`
+	TeamName    string `json:"team_name"`
+	Paused      bool   `json:"paused"`
+	Jobs        []*Job
 }
 
 type Job struct {
@@ -45,7 +46,7 @@ func (c *Client) Pipelines() ([]*Pipeline, error) {
 	pipes := make([]*Pipeline, 0)
 
 	for _, t := range c.targets {
-		p, err := c.requestPipeline(t.API, t.Team, t.Token)
+		p, err := c.requestPipeline(t)
 		if err != nil {
 			return nil, err
 		}
@@ -55,13 +56,13 @@ func (c *Client) Pipelines() ([]*Pipeline, error) {
 	return pipes, nil
 }
 
-func (c *Client) requestPipeline(host, team string, token Token) ([]*Pipeline, error) {
-	req, err := http.NewRequest(http.MethodGet, host+fmt.Sprintf(pipelinesPath, team), nil)
+func (c *Client) requestPipeline(target Target) ([]*Pipeline, error) {
+	req, err := http.NewRequest(http.MethodGet, target.API+fmt.Sprintf(pipelinesPath, target.Team), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.Type, token.Value))
+	req.Header.Set("Authorization", fmt.Sprintf("%s %s", target.Token.Type, target.Token.Value))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -79,12 +80,13 @@ func (c *Client) requestPipeline(host, team string, token Token) ([]*Pipeline, e
 	}
 
 	for _, p := range pipelines {
-		j, err := c.requestJobs(host, p, token)
+		j, err := c.requestJobs(target.API, p, target.Token)
 		if err != nil {
 			return nil, err
 		}
 
 		p.Jobs = j
+		p.DisplayName = fmt.Sprintf("%s/%s", target.Name, p.Name)
 	}
 
 	return pipelines, nil

@@ -36,6 +36,7 @@ func TestTargets(t *testing.T) {
 				Expect(t, targets).To(Contain(concourse.Target{
 					API:  "http://127.0.0.1:8080",
 					Team: "awesome",
+					Name: "targetone",
 					Token: concourse.Token{
 						Type:  "Bearer",
 						Value: "a-token",
