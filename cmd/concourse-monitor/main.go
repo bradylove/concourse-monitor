@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	refreshIntSeconds = flag.Int("refresh-interval", 15, "interval for pulling status from concourse")
-	deamonize         = flag.Bool("d", false, "run concourse-monitor in the background")
+	refreshInterval = flag.Duration("refresh-interval", 15*time.Second, "interval for pulling status from concourse")
+	deamonize       = flag.Bool("d", false, "run concourse-monitor in the background")
 )
 
 func init() {
@@ -44,14 +44,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	refreshInt := time.Duration(*refreshIntSeconds) * time.Second
-
-	notify := notificator.New(notificator.Options{
-		DefaultIcon: assets.CCIconPath,
-		AppName:     "Concourse Monitor",
-	})
-	cache := NewCache(notify)
-
+	cache := state.NewCache(NewNotifier())
 	tray := desktop.DesktopSysTrayNew()
 	icon := assets.Image("icons/cc_icon.png")
 
@@ -67,7 +60,7 @@ func main() {
 	go func() {
 		syncState(tray, cache)
 
-		for range time.Tick(refreshInt) {
+		for range time.Tick(*refreshInterval) {
 			syncState(tray, cache)
 		}
 	}()
@@ -87,7 +80,7 @@ func openInBrowser(target *concourse.Target, path string) desktop.MenuAction {
 	}
 }
 
-func syncState(tray *desktop.DesktopSysTray, cache *Cache) {
+func syncState(tray *desktop.DesktopSysTray, cache *state.Cache) {
 	targets, err := concourse.LoadTargets(filepath.Join(os.Getenv("HOME"), ".flyrc"))
 	if err != nil {
 		log.Printf("Failed to load .flyrc: %s", err)
@@ -147,4 +140,21 @@ func jobsToMenus(target *concourse.Target, jobs []*concourse.Job) []desktop.Menu
 	}
 
 	return menu
+}
+
+type Notifier struct {
+	notifier *notificator.Notificator
+}
+
+func NewNotifier() *Notifier {
+	return &Notifier{
+		notifier: notificator.New(notificator.Options{
+			DefaultIcon: assets.CCIconPath,
+			AppName:     "Concourse Monitor",
+		}),
+	}
+}
+
+func (n *Notifier) Notify(event string) {
+	n.notifier.Push("Concourse Monitor", event, "", notificator.UR_NORMAL)
 }
