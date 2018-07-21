@@ -13,9 +13,9 @@ import (
 	desktop "gitlab.com/axet/desktop/go"
 
 	"github.com/0xAX/notificator"
-	"github.com/bradylove/concourse-monitor/lib/assets"
-	"github.com/bradylove/concourse-monitor/lib/concourse"
-	"github.com/bradylove/concourse-monitor/lib/state"
+	"github.com/bradylove/concourse-monitor/pkg/assets"
+	"github.com/bradylove/concourse-monitor/pkg/concourse"
+	"github.com/bradylove/concourse-monitor/pkg/state"
 )
 
 var (

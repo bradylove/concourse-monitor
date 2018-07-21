@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/apoydence/onpar"
-	"github.com/bradylove/concourse-monitor/lib/concourse"
+	"github.com/bradylove/concourse-monitor/pkg/concourse"
 
 	. "github.com/apoydence/onpar/expect"
 	. "github.com/apoydence/onpar/matchers"

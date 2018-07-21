@@ -1,6 +1,6 @@
 package state
 
-import "github.com/bradylove/concourse-monitor/lib/concourse"
+import "github.com/bradylove/concourse-monitor/pkg/concourse"
 
 const (
 	StatusPending   = "pending"

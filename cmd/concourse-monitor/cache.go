@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/0xAX/notificator"
-	"github.com/bradylove/concourse-monitor/lib/concourse"
-	"github.com/bradylove/concourse-monitor/lib/state"
+	"github.com/bradylove/concourse-monitor/pkg/concourse"
+	"github.com/bradylove/concourse-monitor/pkg/state"
 )
 
 const (
@@ -45,12 +45,7 @@ func (c *Cache) Update(pipelines []*concourse.Pipeline) {
 }
 
 func (c *Cache) Notify(msg string) {
-	c.notifier.Push(
-		"Concourse Monitor",
-		msg,
-		"",
-		notificator.UR_NORMAL,
-	)
+	c.notifier.Push("Concourse Monitor", msg, "", notificator.UR_NORMAL)
 }
 
 func (c *Cache) NotifyOnBuildDiff(old, new *concourse.Build) {
